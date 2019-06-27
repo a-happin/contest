@@ -11,17 +11,13 @@
 
 using namespace std;
 
-inline void solve ()
-{
-}
-
 auto main () -> int
 {
   cin.tie (nullptr);
   ios::sync_with_stdio (false);
   cout << fixed << boolalpha;
   cerr << fixed << boolalpha;
-  solve ();
-  cout << flush;
+
+
 }
 
