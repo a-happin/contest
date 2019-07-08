@@ -89,7 +89,7 @@ namespace detail
     template <typename Iterator, typename F, typename ... Results>
     static constexpr auto f (Iterator, Iterator, F callback, Results ... results) -> void
     {
-      callback (tie (* results ...));
+      callback (* results ...);
     }
   };
 } // namespace detail
@@ -130,8 +130,9 @@ auto main () -> int
   });
   cerr << endl;
 
-  combination <2> (ALL (v), [&] (auto && res) {
-    LOG (res);
+  combination <6> (ALL (v), [&] (auto && ... results) {
+      auto r = {results ...};
+      LOG (r);
   });
 }
 
