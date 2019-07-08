@@ -15,6 +15,8 @@ inline void solve ()
 {
   array <int64_t, 10> a;
   LOG (a);
+  double d = 70;
+  LOG (d);
 }
 
 auto main () -> int

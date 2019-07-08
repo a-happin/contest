@@ -10,8 +10,10 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <iterator>
 #include <map>
 #include <algorithm>
+#include <cstdio>
 #include <cstdint>
 
 namespace local
@@ -39,10 +41,36 @@ namespace local
 
 
   // prototype
+  inline auto print (std::ostream &, const std::string &) -> decltype (auto);
+
+  inline auto print (std::ostream &, const char *) -> decltype (auto);
+
+  template <typename T, typename U>
+  inline auto print (std::ostream &, const std::pair <T, U> &) -> decltype (auto);
+
+  template <typename ... Ts>
+  inline auto print (std::ostream &, const std::tuple <Ts ...> &) -> decltype (auto);
+
+  template <typename T, size_t N>
+  inline auto print (std::ostream &, const T (&) [N]) -> decltype (auto);
+
+  template <typename T, size_t N>
+  inline auto print (std::ostream &, const std::array <T, N> &) -> decltype (auto);
+
+  template <typename T>
+  inline auto print (std::ostream &, const std::vector <T> &) -> decltype (auto);
+
+  template <typename T>
+  inline auto print (std::ostream &, const std::list <T> &) -> decltype (auto);
+
+  template <typename T>
+  inline auto print (std::ostream &, const std::set <T> &) -> decltype (auto);
+
+  template <typename T, typename U>
+  inline auto print (std::ostream &, const std::map <T, U> &) -> decltype (auto);
+
   template <typename T>
   inline auto print (std::ostream &, const T &) -> decltype (auto);
-  inline auto print (std::ostream &, const std::string &) -> decltype (auto);
-  inline auto print (std::ostream &, const char *) -> decltype (auto);
 
 
   // utility
@@ -58,142 +86,137 @@ namespace local
     return apply_impl (f, std::forward <Tuple> (t), std::make_index_sequence <std::tuple_size <std::remove_reference_t <Tuple>>::value> {});
   }
 
+  inline auto print_tuple_impl (std::ostream & stream) -> decltype (auto)
+  {
+    return stream;
+  }
+
   template <typename T, typename ... Ts>
   inline auto print_tuple_impl (std::ostream & stream, const T & x, const Ts & ... xs) -> decltype (auto)
   {
-    int dummy [] {(static_cast <void> (print (stream, x)), 0), (static_cast <void> (stream << ", "), static_cast <void> (print (stream, xs)), 0) ...};
+    struct dummy_t {} dummy_v;
+    dummy_t dummy [] {(static_cast <void> (print (stream, x)), dummy_v), (static_cast <void> (print (stream << ", ", xs)), dummy_v) ...};
     static_cast <void> (dummy);
     return stream;
   }
 
+  template <typename Iterator>
+  inline auto print_list_impl (std::ostream & stream, Iterator begin, Iterator end) -> decltype (auto)
+  {
+    if (begin != end)
+    {
+      print (stream, * begin ++);
+      while (begin != end)
+      {
+        print (stream << ", ", * begin ++);
+      }
+    }
+    return stream;
+  }
 
-  // operator overload
+
+  // for debug log
+  inline auto print (std::ostream & stream, const std::string & s) -> decltype (auto)
+  {
+    stream << '"' << s << '"';
+    return stream;
+  }
+
+  inline auto print (std::ostream & stream, const char * s) -> decltype (auto)
+  {
+    stream << '"' << s << '"';
+    return stream;
+  }
+
   template <typename T, typename U>
-  inline auto operator << (std::ostream & stream, const std::pair <T, U> & p) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::pair <T, U> & p) -> decltype (auto)
   {
     stream << "(";
-    return print_tuple_impl (stream, p.first, p.second) << ")";
+    print_tuple_impl (stream, p.first, p.second);
+    stream << ")";
+    return stream;
   }
 
   template <typename ... Ts>
-  inline auto operator << (std::ostream & stream, const std::tuple <Ts ...> & t) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::tuple <Ts ...> & t) -> decltype (auto)
   {
     stream << "(";
-    apply ([&] (auto && ... xs) {
+    apply ([&] (auto & ... xs) {
       print_tuple_impl (stream, xs ...);
     }, t);
-    return stream << ")";
+    stream << ")";
+    return stream;
   }
 
   template <typename T, size_t N>
-  inline auto operator << (std::ostream & stream, const std::array <T, N> & a) -> decltype (auto)
+  inline auto print (std::ostream & stream, const T (& a) [N]) -> decltype (auto)
   {
     stream << "[";
-    apply ([&] (const auto & ... xs) {
-      print_tuple_impl (stream, xs ...);
-    }, a);
-    return stream << "]";
+    print_list_impl (stream, a, a + N);
+    stream << "]";
+    return stream;
+  }
+
+  template <typename T, size_t N>
+  inline auto print (std::ostream & stream, const std::array <T, N> & a) -> decltype (auto)
+  {
+    stream << "[";
+    print_list_impl (stream, a.begin (), a.end ());
+    stream << "]";
+    return stream;
   }
 
   template <typename T>
-  inline auto operator << (std::ostream & stream, const std::vector <T> & v) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::vector <T> & v) -> decltype (auto)
   {
     stream << "[";
-    if (! v.empty ())
-    {
-      auto ite = v.begin ();
-      print (stream, * ite);
-      for (++ ite; ite != v.end (); ++ ite)
-      {
-        stream << ", ";
-        print (stream, * ite);
-      }
-    }
-    return stream << "]";
+    print_list_impl (stream, v.begin (), v.end ());
+    stream << "]";
+    return stream;
   }
 
   template <typename T>
-  inline auto operator << (std::ostream & stream, const std::list <T> & v) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::list <T> & l) -> decltype (auto)
   {
     stream << "[";
-    if (! v.empty ())
-    {
-      auto ite = v.begin ();
-      print (stream, * ite);
-      for (++ ite; ite != v.end (); ++ ite)
-      {
-        stream << ", ";
-        print (stream, * ite);
-      }
-    }
-    return stream << "]";
+    print_list_impl (stream, l.begin (), l.end ());
+    stream << "]";
+    return stream;
   }
 
   template <typename T>
-  inline auto operator << (std::ostream & stream, const std::set <T> & s) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::set <T> & s) -> decltype (auto)
   {
     stream << "{";
-    if (! s.empty ())
-    {
-      auto ite = s.begin ();
-      print (stream, * ite);
-      for (++ ite; ite != s.end (); ++ ite)
-      {
-        stream << ", ";
-        print (stream, * ite);
-      }
-    }
-    return stream << "}";
+    print_list_impl (stream, s.begin (), s.end ());
+    stream << "}";
+    return stream;
   }
 
   template <typename T, typename U>
-  inline auto operator << (std::ostream & stream, const std::map <T, U> & m) -> decltype (auto)
+  inline auto print (std::ostream & stream, const std::map <T, U> & m) -> decltype (auto)
   {
     stream << "{";
-    if (! m.empty ())
-    {
-      auto ite = m.begin ();
-      print (stream, ite -> first) << ": ";
-      print (stream, ite -> second);
-      for (++ ite; ite != m.end (); ++ ite)
-      {
-        stream << ", ";
-        print (stream, ite -> first) << ": ";
-        print (stream, ite -> second);
-      }
-    }
-    return stream << "}";
+    print_list_impl (stream, m.begin (), m.end ());
+    stream << "}";
+    return stream;
   }
 
-
-  // debug log
   template <typename T>
   inline auto print (std::ostream & stream, const T & x) -> decltype (auto)
   {
     return stream << x;
   }
 
-  inline auto print (std::ostream & stream, const std::string & x) -> decltype (auto)
-  {
-    return stream << '"' << x << '"';
-  }
-
-  inline auto print (std::ostream & stream, const char * x) -> decltype (auto)
-  {
-    return stream << '"' << x << '"';
-  }
-
   template <typename T>
   inline auto println (std::ostream & stream, const T & x) -> decltype (auto)
   {
-    return print (stream, x) << '\n';
+    return print (stream, x) << std::endl;
   }
-
-
 
 } // namespace local
 
-#define LOG(x) do {std::cerr << #x " = "; local::println (std::cerr, (x));} while (false)
+#define LOG(x) do {local::println (std::cerr << fixed << boolalpha << #x " = ", x);} while (false)
 
 
 #endif
