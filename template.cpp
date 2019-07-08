@@ -15,7 +15,6 @@ auto main () -> int
 {
   cin.tie (nullptr);
   ios::sync_with_stdio (false);
-  cout << fixed << boolalpha;
 
 
 }

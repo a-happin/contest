@@ -104,7 +104,6 @@ auto main () -> int
 {
   cin.tie (nullptr);
   ios::sync_with_stdio (false);
-  cout << fixed << boolalpha;
 
   vector <int> v {1,2,3,4,45,5,6,4};
 
