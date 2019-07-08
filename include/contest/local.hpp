@@ -58,6 +58,9 @@ namespace local
   inline auto print (std::ostream &, const std::array <T, N> &) -> decltype (auto);
 
   template <typename T>
+  inline auto print (std::ostream &, const std::initializer_list <T> &) -> decltype (auto);
+
+  template <typename T>
   inline auto print (std::ostream &, const std::vector <T> &) -> decltype (auto);
 
   template <typename T>
@@ -162,6 +165,15 @@ namespace local
   {
     stream << "[";
     print_list_impl (stream, a.begin (), a.end ());
+    stream << "]";
+    return stream;
+  }
+
+  template <typename T>
+  inline auto print (std::ostream & stream, const std::initializer_list <T> & l) -> decltype (auto)
+  {
+    stream << "[";
+    print_list_impl (stream, l.begin (), l.end ());
     stream << "]";
     return stream;
   }
