@@ -74,11 +74,11 @@ namespace detail
   struct combination_helper
   {
     template <typename Iterator, typename F, typename ... Results>
-    static constexpr auto f (Iterator begin, Iterator end, F callback, Results ... results) -> void
+    static constexpr auto f (Iterator begin, Iterator end, F callback, Results & ... results) -> void
     {
       for (auto ite = begin; ite < end; ++ ite)
       {
-        combination_helper <R - 1>::f (next (ite), end, callback, results ..., ite);
+        combination_helper <R - 1>::f (next (ite), end, callback, results ..., * ite);
       }
     }
   };
@@ -87,9 +87,9 @@ namespace detail
   struct combination_helper <0u>
   {
     template <typename Iterator, typename F, typename ... Results>
-    static constexpr auto f (Iterator, Iterator, F callback, Results ... results) -> void
+    static constexpr auto f (Iterator, Iterator, F callback, Results & ... results) -> void
     {
-      callback (* results ...);
+      callback (results ...);
     }
   };
 } // namespace detail
