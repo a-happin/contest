@@ -42,7 +42,7 @@ inline auto print_list_impl (ostream & stream, Iterator begin, Iterator end, con
 namespace detail
 {
   template <typename Iterator, typename F, typename T>
-  inline auto combination (Iterator begin, Iterator end, unsigned r, F callback, vector <T> & res) -> void
+  inline auto combination_impl (Iterator begin, Iterator end, unsigned r, F callback, vector <T> & res) -> void
   {
     if (r == 0u)
     {
@@ -53,7 +53,7 @@ namespace detail
       for (auto ite = begin; ite < end; ++ ite)
       {
         res.push_back (cref (* ite));
-        combination (next (ite), end, r - 1, callback, res);
+        combination_impl (next (ite), end, r - 1, callback, res);
         res.pop_back ();
       }
     }
@@ -61,11 +61,43 @@ namespace detail
 } // namespace detail
 
 template <typename Iterator, typename F>
-inline auto combination (Iterator begin, Iterator end, unsigned r, F callback)
+inline auto combination_ (Iterator begin, Iterator end, unsigned r, F callback)
 {
   using t = reference_wrapper <add_const_t <decay_t <decltype (* begin)>>>;
   vector <t> res;
-  return detail::combination (begin, end, r, callback, res);
+  return detail::combination_impl (begin, end, r, callback, res);
+}
+
+namespace detail
+{
+  template <unsigned R>
+  struct combination_helper
+  {
+    template <typename Iterator, typename F, typename ... Results>
+    static constexpr auto f (Iterator begin, Iterator end, F callback, Results ... results) -> void
+    {
+      for (auto ite = begin; ite < end; ++ ite)
+      {
+        combination_helper <R - 1>::f (next (ite), end, callback, results ..., ite);
+      }
+    }
+  };
+
+  template <>
+  struct combination_helper <0u>
+  {
+    template <typename Iterator, typename F, typename ... Results>
+    static constexpr auto f (Iterator, Iterator, F callback, Results ... results) -> void
+    {
+      callback (tie (* results ...));
+    }
+  };
+} // namespace detail
+
+template <unsigned R, typename Iterator, typename F>
+inline constexpr auto combination (Iterator begin, Iterator end, F callback)
+{
+  return detail::combination_helper <R>::f (begin, end, callback);
 }
 
 auto main () -> int
@@ -94,7 +126,12 @@ auto main () -> int
 
   LOG (t);
 
-  combination (pi, pi + 3, 2, [&] (auto && res) {
+  combination_ (pi, pi + 3, 2, [&] (auto && res) {
+    LOG (res);
+  });
+  cerr << endl;
+
+  combination <2> (ALL (v), [&] (auto && res) {
     LOG (res);
   });
 }
