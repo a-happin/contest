@@ -100,6 +100,13 @@ inline constexpr auto combination (Iterator begin, Iterator end, F callback)
   return detail::combination_helper <R>::f (begin, end, callback);
 }
 
+inline auto input_vector_int (int n)
+{
+  vector <int> v;
+  copy_n (istream_iterator <int> (cin), n, back_inserter (v));
+  return v;
+}
+
 auto main () -> int
 {
   cin.tie (nullptr);
