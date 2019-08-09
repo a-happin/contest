@@ -2,10 +2,10 @@
 #include <bits/stdc++.h>
 
 // 型推論for
-#define FOR(i,b,e) for (common_type_t <decltype(b), decltype(e)> i = (b), i ## __end = (e); i != i ## __end; ++ i)
+#define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
 // コードが短い方
-//#define FOR(i,b,e) for (decay_t <decltype (true ? (b) : (e))> i = (b), i ## __end = (e); i != i ## __end; ++ i)
+//#define FOR(i,b,e) for (decay_t <decltype (true ? (b) : (e))> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
 // repeat
 #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
@@ -256,6 +256,24 @@ inline auto operator << (ostream & stream, const set <T> & x) -> ostream &
 {
   stream << "{";
   ostream_join (begin (x), end (x), stream, ", ");
+  return stream << "}";
+}
+
+template <typename T, typename U>
+inline auto operator << (ostream & stream, const map <T, U> & x) -> ostream &
+{
+  auto f = [&] (auto && elem) {
+    stream << elem.first << ": " << elem.second;
+  };
+  auto first = begin (x);
+  auto last = end (x);
+  stream << "{";
+  if (first != last) f (* first ++);
+  while (first != last)
+  {
+    stream << ", ";
+    f (* first ++);
+  }
   return stream << "}";
 }
 
