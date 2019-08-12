@@ -7,6 +7,9 @@
 // コードが短い方
 //#define FOR(i,b,e) for (decay_t <decltype (true ? (b) : (e))> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
+// for reverse (unsigned対応)
+#define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
+
 // repeat
 #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
 
@@ -29,12 +32,16 @@
 using namespace std;
 
 
-// とてもおおきい (dp初期化用)
+// とてもおおきい
 template <typename T = int64_t>
 static constexpr auto inf = static_cast <T> (0x0de0b6b43b9aca00);
 
 // とてもちいさい (double比較用)
 static constexpr auto EPS = 1e-9;
+
+// 入力用
+template <typename T>
+inline auto input () { T a; return cin >> a ? a : throw runtime_error ("no input"); }
 
 // 最大値更新
 template <typename T, typename U>
@@ -118,7 +125,7 @@ template <int64_t M>
 struct Mod {
   using T = decltype (M);
   T n;
-  static_assert (M != 0, "");
+  static_assert (M > 0, "");
   constexpr Mod () noexcept : n {0} {}
   constexpr Mod (const T & v) noexcept : n {v >= 0 ? v % M : (v % M + M) % M} {}
   constexpr operator T () const noexcept { return n; }
@@ -138,7 +145,7 @@ struct UnionFind
 {
   using node_t = size_t;
   vector <node_t> parent;
-  explicit UnionFind (node_t n) : parent (n) { for (node_t i = 0; i < n; ++ i) parent [i] = i; }
+  explicit UnionFind (node_t n) : parent (n) { iota (begin (parent), end (parent), node_t {}); }
   auto root (node_t x) noexcept -> node_t { return parent [x] == x ? x : parent [x] = root (parent [x]); }
   auto merge (node_t x, node_t y) noexcept { x = root (x); y = root (y); if (x != y) parent [y] = x; }
 };
@@ -155,7 +162,7 @@ struct Fix : private F
   }
 };
 
-// ヘルパー関数
+// ヘルパー関数(for C++14)
 template <typename F>
 constexpr auto make_fix (F f) noexcept
 {
@@ -184,6 +191,37 @@ inline auto topological_sort (const Graph & graph)
   return res;
 }
 
+// ベルマン・フォード法 O(頂点数 * 辺の数)
+// 負の重みの辺を持つグラグの最短経路を探索する
+// ある頂点vに到達できないとき、 res[v] = inf、
+// 負閉路（循環することで累計コストが無限に減っていくループ構造）を経由して
+//   ある頂点vに到達できるとき、res[v] = - infになる
+template <typename Edges>
+inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
+{
+  using weight_t = int64_t;
+  vector <weight_t> res (n, inf <weight_t>);
+  res [start] = 0;
+  rep (i, n * 2)
+  {
+    for (auto && edge : edges)
+    {
+      size_t from, to;
+      weight_t weight;
+      tie (from, to, weight) = edge;
+      if (res [from] < inf <weight_t> && res [to] > res [from] + weight)
+      {
+        res [to] = res [from] + weight;
+        if (i >= n)
+        {
+          res [to] = - inf <weight_t>;
+        }
+      }
+    }
+  }
+  return res;
+}
+
 // delimiter付き出力
 template <typename Iterator, typename String>
 inline auto ostream_join (Iterator first, Iterator last, ostream & stream, String && delimiter = " ")
@@ -203,6 +241,16 @@ inline auto for_each_join (Iterator first, Iterator last, F f, String && delimit
     f (* first ++);
   }
 }
+
+/*
+template <typename T>
+static auto type_name ()
+{
+  static int status;
+  static auto p = abi::__cxa_demangle (typeid (T).name (), nullptr, nullptr, & status);
+  return string_view {p};
+}
+*/
 
 namespace detail
 {
@@ -236,15 +284,19 @@ inline constexpr auto combination (Iterator begin, Iterator end, F callback)
   return detail::combination_helper <R>::f (begin, end, callback);
 }
 
-inline auto input_vector_int (size_t n)
+template <typename T, typename U>
+inline auto operator << (ostream & stream, const pair <T, U> & p) -> ostream &
 {
-  vector <int> v;
-  copy_n (istream_iterator <int> (cin), n, back_inserter (v));
-  return v;
+  return stream << "(" << p.first << ", " << p.second << ")";
 }
 
-template <typename T>
-inline auto operator << (ostream & stream, const vector <T> & x) -> ostream &
+template <typename T, typename ...>
+struct first_type { using type = T; };
+template <typename T, typename ... Ts>
+using first_type_t = typename first_type <T, Ts ...>::type;
+
+template <template <typename ...> class Container, typename T>
+inline auto operator << (ostream & stream, const Container <T> & x) -> first_type_t <ostream &, decltype (begin (x)), decltype (end (x))>
 {
   stream << "[";
   ostream_join (begin (x), end (x), stream, ", ");
@@ -262,18 +314,19 @@ inline auto operator << (ostream & stream, const set <T> & x) -> ostream &
 template <typename T, typename U>
 inline auto operator << (ostream & stream, const map <T, U> & x) -> ostream &
 {
-  auto f = [&] (auto && elem) {
-    stream << elem.first << ": " << elem.second;
+  struct f_t {
+    ostream & stream;
+    auto operator () (const pair <T, U> & p) const
+    {
+      stream << p.first << ": " << p.second;
+    }
+    auto operator () (const char * delimiter) const
+    {
+      stream << delimiter;
+    }
   };
-  auto first = begin (x);
-  auto last = end (x);
   stream << "{";
-  if (first != last) f (* first ++);
-  while (first != last)
-  {
-    stream << ", ";
-    f (* first ++);
-  }
+  for_each_join (begin (x), end (x), f_t {stream}, ", ");
   return stream << "}";
 }
 
@@ -281,5 +334,6 @@ auto main () -> int
 {
   cin.tie (nullptr);
   ios::sync_with_stdio (false);
+
 }
 
