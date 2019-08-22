@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "clang++",
+      "args": [
+        "-std=c++14",
+        "-Wall",
+        "-Wextra",
+        "-pedantic-errors",
+        "-Weverything",
+        "-Wno-c++98-compat-pedantic",
+        "-Wno-c11-extensions",
+        "-Wno-unused-macros",
+        "-O0",
+        "-g",
+        "-o",
+        "${fileDirname}/a.out",
+        "${file}"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
