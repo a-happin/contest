@@ -5,7 +5,7 @@
 #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
 // コードが短い方
-//#define FOR(i,b,e) for (decay_t <decltype (true ? (b) : (e))> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+//#define FOR(i,b,e) for (decay_t <decltype (0 ? (b) : (e))> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
 // for reverse (unsigned対応)
 #define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
@@ -25,6 +25,12 @@
 // iterator pair
 #define ALL(x) begin (x), end (x)
 
+// tail
+#define TAIL(b,e) next (b), (e)
+
+// インデックス付きFOR
+#define FOR_WITH_INDEX(i,ite,b,e) for (size_t i = 0; i == 0; i |= 1) for (auto ite = (b), ite ## __end = (e); ite != ite ## __end; static_cast <void> (++ ite), ++ i)
+
 // デバッグ用
 #define dump(x) cerr << #x " = " << boolalpha << (x) << endl;
 
@@ -36,8 +42,13 @@ using namespace std;
 template <typename T = int64_t>
 static constexpr auto inf = static_cast <T> (0x0de0b6b43b9aca00);
 
-// とてもちいさい (double比較用)
-static constexpr auto EPS = 1e-9;
+// double比較
+inline constexpr auto double_equal (double a, double b) noexcept
+{
+  // とてもちいさい
+  constexpr auto EPS = 1e-9;
+  return abs (a - b) < EPS;
+}
 
 // 入力用
 template <typename T>
@@ -220,6 +231,16 @@ inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
     }
   }
   return res;
+}
+
+// 多次元vector生成用ヘルパー関数
+template <typename T>
+inline auto make_vector (const size_t & n, const T & init) { return vector <T> (n, init); }
+template <typename ... Ts>
+inline auto make_vector (const size_t & n, const Ts & ... rest)
+{
+  using value_type = decay_t <decltype (make_vector (rest ...))>;
+  return vector <value_type> (n, make_vector (rest ...));
 }
 
 // delimiter付き出力
