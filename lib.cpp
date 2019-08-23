@@ -40,7 +40,7 @@ using namespace std;
 
 // とてもおおきい
 template <typename T = int64_t>
-static constexpr auto inf = static_cast <T> (0x0de0b6b43b9aca00);
+static constexpr auto inf = static_cast <T> (0xde0b6b43b9aca00);
 
 // double比較
 inline constexpr auto double_equal (double a, double b) noexcept
