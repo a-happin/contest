@@ -2,7 +2,7 @@
 #include <bits/stdc++.h>
 
 // 型推論for
-#define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+#define FOR(i,b,e)  for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
 
 // コードが短い方
 //#define FOR(i,b,e) for (decay_t <decltype (0 ? (b) : (e))> i = (b), i ## __end = (e); i < i ## __end; ++ i)
@@ -11,28 +11,28 @@
 #define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
 
 // repeat
-#define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
+#define rep(i,n)    FOR (i, size_t {}, n)
 
 // repeat 1-indexed
-#define rep1(i,n) for (decay_t <decltype (n)> i = 1, i ## __len = (n); i <= i ## __len; ++ i)
+#define rep1(i,n)   FOR (i, size_t {1}, (n) + 1)
 
 // repeat reverse
-#define repr(i,n) for (auto i = (n); i --;)
+#define repr(i,n)   FORR (i, size_t {}, n)
 
 // repeat 1-indexed reverse
-#define rep1r(i,n) for (auto i = (n); i > 0; -- i)
+#define rep1r(i,n)  FORR (i, size_t {1}, (n) + 1)
 
 // iterator pair
-#define ALL(x) begin (x), end (x)
+#define ALL(x)      begin (x), end (x)
 
 // tail
-#define TAIL(b,e) next (b), (e)
+#define TAIL(b,e)   next (b), (e)
 
 // インデックス付きFOR
 #define FOR_WITH_INDEX(i,ite,b,e) for (size_t i = 0; i == 0; i |= 1) for (auto ite = (b), ite ## __end = (e); ite != ite ## __end; static_cast <void> (++ ite), ++ i)
 
 // デバッグ用
-#define dump(x) cerr << #x " = " << boolalpha << (x) << endl;
+#define dump(x) cerr << #x " = " << boolalpha << (x) << endl
 
 // おまじない
 using namespace std;
@@ -40,7 +40,11 @@ using namespace std;
 
 // とてもおおきい
 template <typename T = int64_t>
-static constexpr auto inf = static_cast <T> (0xde0b6b43b9aca00);
+constexpr auto inf = static_cast <T> (0xde0b6b43b9aca00);
+
+// 0がsize_tやint64_tに推論されないの不安よな。
+constexpr auto operator"" _zu (unsigned long long x) noexcept { return static_cast <size_t> (x); }
+constexpr auto operator"" _ll (unsigned long long x) noexcept { return static_cast <int64_t> (x); }
 
 // double比較
 inline constexpr auto double_equal (double a, double b) noexcept
@@ -52,7 +56,7 @@ inline constexpr auto double_equal (double a, double b) noexcept
 
 // 入力用
 template <typename T>
-inline auto input () { T a; return cin >> a ? a : throw runtime_error ("no input"); }
+[[deprecated]] inline auto input () { T a; return cin >> a ? a : throw runtime_error ("no input"); }
 
 // 最大値更新
 template <typename T, typename U>
@@ -70,14 +74,14 @@ inline constexpr auto update_min (T & a, U && b)
 
 // 最大の要素
 template <typename Iterator>
-inline constexpr auto max_of (Iterator first, Iterator last) -> decltype (auto)
+[[deprecated]] inline constexpr auto max_of (Iterator first, Iterator last) -> decltype (auto)
 {
   return first != last ? * max_element (first, last) : throw out_of_range ("max_of");
 }
 
 // 最小の要素
 template <typename Iterator>
-inline constexpr auto min_of (Iterator first, Iterator last) -> decltype (auto)
+[[deprecated]] inline constexpr auto min_of (Iterator first, Iterator last) -> decltype (auto)
 {
   return first != last ? * min_element (first, last) : throw out_of_range ("min_of");
 }
@@ -95,7 +99,8 @@ template <typename Iterator>
 inline auto cumulative_sum (Iterator first, Iterator last)
 {
   using T = typename iterator_traits <Iterator>::value_type;
-  vector <T> res (size_t {1}, T {});
+  vector <T> res;
+  res.emplace_back ();
   partial_sum (first, last, back_inserter (res));
   return res;
 }
@@ -184,11 +189,11 @@ constexpr auto make_fix (F f) noexcept
 template <typename Graph>
 inline auto topological_sort (const Graph & graph)
 {
-  using node_t = size_t;
+  using vertex_t = size_t;
   enum class flag_t { YET, VISITED, DONE };
   auto n = graph.size ();
   vector <flag_t> visited (n, flag_t::YET);
-  vector <node_t> res (n);
+  vector <vertex_t> res (n);
   auto res_ite = res.end ();
   auto impl = [&] (auto self, auto && from) {
     if (visited[from] == flag_t::DONE) return;
@@ -198,7 +203,7 @@ inline auto topological_sort (const Graph & graph)
     * -- res_ite = from;
     visited[from] = flag_t::DONE;
   };
-  rep (i, n) impl (impl, node_t {i});
+  rep (i, n) impl (impl, i);
   return res;
 }
 
@@ -210,6 +215,7 @@ inline auto topological_sort (const Graph & graph)
 template <typename Edges>
 inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
 {
+  using vertex_t = size_t;
   using weight_t = int64_t;
   vector <weight_t> res (n, inf <weight_t>);
   res [start] = 0;
@@ -217,7 +223,7 @@ inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
   {
     for (auto && edge : edges)
     {
-      size_t from, to;
+      vertex_t from, to;
       weight_t weight;
       tie (from, to, weight) = edge;
       if (res [from] < inf <weight_t> && res [to] > res [from] + weight)
