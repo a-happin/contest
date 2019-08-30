@@ -4,7 +4,7 @@
 #define ALL(x)     begin (x), end (x)
 using namespace std;
 using ll = int64_t;
-constexpr ll inf = 0xde0b6b43b9aca00;
+constexpr ll inf = 2e18;
 
 auto main () -> int
 {

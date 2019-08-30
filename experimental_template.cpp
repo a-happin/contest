@@ -2,7 +2,6 @@
 #include <boost/range/irange.hpp>
 //#define rep(i,n)    for (size_t i = 0, i ## __len = (n); i < i ## __len; ++ i)
 #define FOR(i,b,e)  for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
-#define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
 #define rep(i,n)    FOR (i, 0_zu, n)
 #define ALL(x)      begin (x), end (x)
 
@@ -11,15 +10,16 @@
 #define INVOKE(f,...)		f (f, __VA_ARGS__)
 
 using namespace std;
-using zu = size_t;
 using ll = int64_t;
-using vertex_t = zu;
+using vertex_t = size_t;
 using weight_t = ll;
 using edge_t = tuple <vertex_t, vertex_t, weight_t>;
 using graph_t = vector <vector <vertex_t>>;
 
-constexpr ll inf = 0xde0b6b43b9aca00;
-constexpr ll MOD = 1000000007;
+//constexpr ll inf = 0xde0b6b43b9aca00;
+//constexpr ll inf = 1ll<<60|ll(1e9+7);
+constexpr ll inf = 2e18;
+constexpr ll MOD = ll(1e9+7);
 constexpr auto operator"" _zu (unsigned long long x) noexcept { return static_cast <size_t> (x); }
 constexpr auto operator"" _ll (unsigned long long x) noexcept { return static_cast <int64_t> (x); }
 

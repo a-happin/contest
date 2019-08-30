@@ -39,8 +39,9 @@ using namespace std;
 
 
 // とてもおおきい
-template <typename T = int64_t>
-constexpr auto inf = static_cast <T> (0xde0b6b43b9aca00);
+//constexpr int64_t inf = 0x1bc16d683b9aca07; // int32_tにキャストしても使えるやつ
+//constexpr int64_t inf = 1ll << 60; // int32_tにキャストすることなんかないです。
+constexpr int64_t inf = 2e18; // こっちのほうが短い
 
 // 0がsize_tやint64_tに推論されないの不安よな。
 constexpr auto operator"" _zu (unsigned long long x) noexcept { return static_cast <size_t> (x); }
@@ -217,7 +218,7 @@ inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
 {
   using vertex_t = size_t;
   using weight_t = int64_t;
-  vector <weight_t> res (n, inf <weight_t>);
+  vector <weight_t> res (n, inf);
   res [start] = 0;
   rep (i, n * 2)
   {
@@ -226,12 +227,12 @@ inline auto bellman_ford (const Edges & edges, size_t n, size_t start = 0)
       vertex_t from, to;
       weight_t weight;
       tie (from, to, weight) = edge;
-      if (res [from] < inf <weight_t> && res [to] > res [from] + weight)
+      if (res [from] < inf && res [to] > res [from] + weight)
       {
         res [to] = res [from] + weight;
         if (i >= n)
         {
-          res [to] = - inf <weight_t>;
+          res [to] = - inf;
         }
       }
     }
