@@ -188,23 +188,92 @@ constexpr auto make_fix (F f) noexcept
 
 // トポロジカルソート
 template <typename Graph>
-inline auto topological_sort (const Graph & graph)
+inline auto topological_sort (const Graph & g)
 {
   using vertex_t = size_t;
-  enum class flag_t { YET, VISITED, DONE };
-  auto n = graph.size ();
+  enum class flag_t : unsigned char { YET, VISITED, DONE };
+  auto n = g.size ();
   vector <flag_t> visited (n, flag_t::YET);
-  vector <vertex_t> res (n);
-  auto res_ite = res.end ();
-  auto impl = [&] (auto self, auto && from) {
-    if (visited[from] == flag_t::DONE) return;
-    if (visited[from] == flag_t::VISITED) throw runtime_error ("Error in topological_sort: The graph must be DAG.");
-    visited[from] = flag_t::VISITED;
-    for (auto && to : graph[from]) self (self, to);
-    * -- res_ite = from;
-    visited[from] = flag_t::DONE;
+  vector <vertex_t> res;
+  auto res_ite = back_inserter (res);
+  auto dfs = [&] (auto self, auto && now) {
+    switch (visited [now])
+    {
+    case flag_t::DONE:
+      return;
+    case flag_t::VISITED:
+      throw runtime_error ("Error in topological_sort: The graph must be DAG.");
+    }
+    visited [now] = flag_t::VISITED;
+    for (auto && to : g [now])
+    {
+      self (self, to);
+    }
+    * res_ite ++ = now;
+    visited [now] = flag_t::DONE;
   };
-  rep (i, n) impl (impl, i);
+  rep (i, n) dfs (dfs, i);
+  reverse (ALL (res));
+  return res;
+}
+
+template <typename Graph, typename Container>
+inline auto topological_sort_generic (const Graph & g, const Container & vertices)
+{
+  using vertex_t = size_t;
+  enum class flag_t : unsigned char { YET, VISITED, DONE };
+  auto n = vertices.size ();
+  vector <flag_t> visited (n, flag_t::YET);
+  vector <vertex_t> res;
+  auto res_ite = back_inserter (res);
+  auto dfs = [&] (auto self, auto && now) {
+    switch (visited [now])
+    {
+    case flag_t::DONE:
+      return;
+    case flag_t::VISITED:
+      throw runtime_error ("Error in topological_sort: The graph must be DAG.");
+    }
+    visited [now] = flag_t::VISITED;
+    for (auto && to : g [now])
+    {
+      self (self, to);
+    }
+    * res_ite ++ = now;
+    visited [now] = flag_t::DONE;
+  };
+  for (auto && i : vertices) dfs (dfs, i);
+  reverse (ALL (res));
+  return res;
+}
+
+template <typename Graph, typename Iterator>
+inline auto topological_sort_generic (const Graph & g, Iterator first, Iterator last)
+{
+  using vertex_t = size_t;
+  enum class flag_t : unsigned char { YET, VISITED, DONE };
+  auto n = distance (first, last);
+  vector <flag_t> visited (n, flag_t::YET);
+  vector <vertex_t> res;
+  auto res_ite = back_inserter (res);
+  auto dfs = [&] (auto self, auto && now) {
+    switch (visited [now])
+    {
+    case flag_t::DONE:
+      return;
+    case flag_t::VISITED:
+      throw runtime_error ("Error in topological_sort: The graph must be DAG.");
+    }
+    visited [now] = flag_t::VISITED;
+    for (auto && to : g [now])
+    {
+      self (self, to);
+    }
+    * res_ite ++ = now;
+    visited [now] = flag_t::DONE;
+  };
+  FOR (ite, first, last) dfs (dfs, * ite);
+  reverse (ALL (res));
   return res;
 }
 
