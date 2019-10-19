@@ -137,6 +137,25 @@ inline auto enumerate_divisors (T n)
   return res;
 }
 
+// 素因数分解
+template <typename T>
+inline auto factorize(T n)
+{
+  vector <pair <T, size_t>> res;
+  for (T i = 2; i * i <= n; ++ i)
+  {
+    if (n % i != 0) continue;
+    res.emplace_back (i, 0);
+    while (n % i == 0)
+    {
+      n /= i;
+      ++ res.back ().second;
+    }
+  }
+  if (n != 1) res.emplace_back (n, 1);
+  return res;
+}
+
 // (mod M) の世界
 template <int64_t M>
 struct Mod {
